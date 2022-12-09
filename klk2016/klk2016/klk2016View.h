@@ -22,6 +22,8 @@ private:
 
 	int rotation = 0;
 	int moveX = 0;
+	bool hit = false;
+	double pravac = 0;
 
 // Operations
 public:

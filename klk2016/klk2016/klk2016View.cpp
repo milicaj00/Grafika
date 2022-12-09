@@ -85,10 +85,22 @@ void Cklk2016View::OnDraw(CDC* pDC)
 	XFORM oldForm;
 	memDC->GetWorldTransform(&oldForm);
 	Translate(memDC, 600, 400, false);
+
+	XFORM pomForm;
+	memDC->GetWorldTransform(&pomForm);
+	if (hit)
+	{
+		Rotate(memDC, pravac, false);
+		Translate(memDC, moveX, 0, false);
+	}
 	DrawBall(memDC, 30);
+	memDC->SetWorldTransform(&pomForm);
 
 	Rotate(memDC, rotation, false);
-	Translate(memDC, moveX, 0, false);
+	if (!hit)
+	{
+		Translate(memDC, moveX, 0, false);
+	}
 	Translate(memDC, -20, 0, false);
 	Rotate(memDC, 180, false);
 
@@ -205,11 +217,20 @@ void Cklk2016View::DrawStick(CDC* pDC, int w)
 
 	points = new CPoint[4];
 	points[0] = CPoint(w, 0);
-	points[1] = CPoint(w, w / 65);
+	points[1] = CPoint(w, w / 50);
 	points[2] = CPoint(2 * w / 3, w / 65);
 	points[3] = CPoint(2 * w / 3, 0);
 
 	pDC->Polygon(points, 4);
+
+	double r = w / 50 / 2;
+	Translate(pDC, w+r, r, false);
+	pDC->Ellipse(-r, -r, r, r);
+
+	newPen = new CPen(PS_COSMETIC,1, RGB(250, 250, 250));
+	pDC->SelectObject(newPen);
+	pDC->MoveTo(-w, -1);
+	pDC->LineTo(0, 1);
 
 	pDC->SelectObject(oldBrush);
 	newBrush->DeleteObject();
@@ -248,14 +269,14 @@ void Cklk2016View::DrawBall(CDC* pDC, int w)
 
 void Cklk2016View::DrawTable(CDC* pDC, CRect rect)
 {
-	int sizeX = rect.Width() / table->Width() + 1;
-	int sizeY = rect.Height() / table->Height() + 1;
-	for (int i = 0; i < sizeX; i++) {
-		for (int j = 0; j < sizeY; j++) {
+	int sizeX = rect.Width();
+	int sizeY = rect.Height();
+	for (int i = 0; i < sizeX; i+= table->Width()) {
+		for (int j = 0; j < sizeY; j+= table->Height()) {
 			table->Draw(pDC,
 				CRect(0, 0, table->Width(), table->Height()),
-				CRect(i * table->Width(), j * table->Height(),
-					(i + 1) * table->Width(), (j + 1) * table->Height()));
+				CRect(i, j,
+					i + table->Width(), j + table->Height()));
 		}
 	}
 }
@@ -326,14 +347,30 @@ void Cklk2016View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		break;
 	case VK_UP:
 		moveX += 10;
+		if (moveX > 650) {
+			moveX = 650;
+		}
 		Invalidate();
 		break;
 	case VK_DOWN:
 		moveX -= 10;
+		if (moveX < -550) {
+			moveX = -550;
+		}
 		Invalidate();
 		break;
 	default:
 		break;
 	}
+
+	if (moveX == 10) {
+		hit = true;
+		pravac = rotation;
+	}
+	if (moveX == 0) {
+		hit = false;
+		pravac = 0;
+	}
+	
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
